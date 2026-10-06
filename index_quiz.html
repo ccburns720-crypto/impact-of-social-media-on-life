@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Media Impact Study App</title>
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --primary-hover: #4338CA;
+            --accent: #06B6D4;
+            --background: #F3F4F6;
+            --card-bg: #FFFFFF;
+            --text-dark: #1F2937;
+            --text-light: #6B7280;
+            --success: #10B981;
+            --danger: #EF4444;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--background);
+            color: var(--text-dark);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+            width: 100%;
+            text-align: center;
+            padding: 30px 20px;
+            box-sizing: border-box;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        h1 { margin: 0; font-size: 2rem; }
+        .subtitle { margin: 5px 0 0; opacity: 0.9; font-size: 1rem; }
+
+        .container {
+            width: 100%;
+            max-width: 650px;
+            padding: 20px;
+            box-sizing: border-box;
+            flex: 1;
+        }
+
+        .mode-selector {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        button.mode-btn {
+            background-color: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            padding: 10px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        button.mode-btn.active, button.mode-btn:hover {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        /* Flashcard Styles */
+        .flashcard-wrapper {
+            perspective: 1000px;
+            min-height: 280px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        .flashcard {
+            width: 100%;
+            height: 100%;
+            min-height: 280px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+            border-radius: 16px;
+        }
+
+        .flashcard.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+            box-sizing: border-box;
+            border-radius: 16px;
+            background-color: var(--card-bg);
+            text-align: center;
+        }
+
+        .card-front {
+            color: var(--text-dark);
+        }
+
+        .card-front::after {
+            content: "Click Card to Flip";
+            position: absolute;
+            bottom: 20px;
+            font-size: 0.8rem;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .card-back {
+            background: linear-gradient(135deg, #EEF2F6, #E0E7FF);
+            transform: rotateY(180deg);
+            color: var(--text-dark);
+        }
+
+        /* Quiz Styles */
+        .quiz-card {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+        }
+
+        .options-list {
+            list-style: none;
+            padding: 0;
+            margin: 20px 0 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option-btn {
+            background-color: #F9FAFB;
+            border: 2px solid #E5E7EB;
+            border-radius: 8px;
+            padding: 14px 20px;
+            text-align: left;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+
+        .option-btn:not([disabled]):hover {
+            border-color: var(--primary);
+            background-color: #F5F3FF;
+        }
+
+        .option-btn.correct {
+            background-color: #D1FAE5;
+            border-color: var(--success);
+            color: #065F46;
+        }
+
+        .option-btn.wrong {
+            background-color: #FEE2E2;
+            border-color: var(--danger);
+            color: #991B1B;
+        }
+
+        .feedback {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+            line-height: 1.5;
+        }
+
+        .feedback.visible { display: block; }
+        .feedback-success { background-color: #ECFDF5; color: #047857; border-left: 5px solid var(--success); }
+        .feedback-error { background-color: #FEF2F2; color: #B91C1C; border-left: 5px solid var(--danger); }
+
+        /* Utility Navigation */
+        .nav-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+        }
+
+        button.nav-btn {
+            background-color: var(--primary);
+            border: none;
+            color: white;
+            padding: 10px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button.nav-btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        button.nav-btn[disabled] {
+            background-color: #D1D5DB;
+            cursor: not-allowed;
+        }
+
+        .progress-indicator {
+            font-size: 0.95rem;
+            color: var(--text-light);
+            font-weight: 500;
+        }
+
+        /* Score Screen */
+        .score-screen {
+            text-align: center;
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 40px 30px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+            display: none;
+        }
+
+        .score-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--accent), var(--primary));
+            color: white;
+            font-size: 2.5rem;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px auto;
+            box-shadow: 0 8px 16px rgba(79, 70, 229, 0.3);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Social Media Study Deck</h1>
+        <p class="subtitle">Explore statistics & impacts on students' academic and mental well-being</p>
+    </header>
+
+    <div class="container">
+        <div class="mode-selector">
+            <button class="mode-btn active" onclick="setMode('flashcard')">Flashcards</button>
+            <button class="mode-btn" onclick="setMode('quiz')">Quiz Mode</button>
+        </div>
+
+        <!-- Flashcard Module -->
+        <div id="flashcard-module">
+            <div class="flashcard-wrapper" onclick="flipCard()">
+                <div class="flashcard" id="card">
+                    <div class="card-face card-front">
+                        <h2 id="card-question">Question goes here</h2>
+                    </div>
+                    <div class="card-face card-back">
+                        <h3 id="card-answer">Answer goes here</h3>
+                        <p id="card-fact" style="font-size: 0.95rem; line-height: 1.5; color: #4B5563; margin-top: 15px;"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quiz Module -->
+        <div id="quiz-module" style="display: none;">
+            <div class="quiz-card">
+                <h2 id="quiz-question" style="margin-top: 0;">Question goes here</h2>
+                <div class="options-list" id="quiz-options"></div>
+                <div class="feedback" id="quiz-feedback"></div>
+            </div>
+        </div>
+
+        <!-- Score Screen -->
+        <div id="score-screen" class="score-screen">
+            <h2>Quiz Completed!</h2>
+            <p style="color: var(--text-light);">Here is your score performance details:</p>
+            <div class="score-circle" id="final-score">0/0</div>
+            <p id="congrats-message" style="font-weight: 600; margin: 20px 0;"></p>
+            <button class="nav-btn" onclick="restartQuiz()">Try Again</button>
+        </div>
+
+        <!-- Bottom Navigation Interface -->
+        <div class="nav-controls" id="nav-section">
+            <button class="nav-btn" id="prev-btn" onclick="prevItem()">Previous</button>
+            <span class="progress-indicator" id="progress-text">1 of 10</span>
+            <button class="nav-btn" id="next-btn" onclick="nextItem()">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Interactive Flashcard and Quiz dataset logic
+        const questions = [{"id": 1, "question": "Based on our dataset, what is the average GPA of the surveyed students?", "options": ["3.2", "2.5", "1.8", "4.0"], "answer": "3.2", "fact": "The mean GPA computed directly from our 4,500 surveyed student records is 3.2."}, {"id": 2, "question": "What is the maximum daily social media screen time observed in the dataset?", "options": ["9 hours", "5 hours", "12 hours", "24 hours"], "answer": "9 hours", "fact": "The highest reported daily screen time in this dataset reaches a significant 9 hours."}, {"id": 3, "question": "Which platform has the highest primary usage rate among the dataset's participants?", "options": ["Instagram", "TikTok", "YouTube", "Instagram"], "answer": "Instagram", "fact": "Instagram is the most frequently cited dominant social media platform by students in our research."}, {"id": 4, "question": "How did higher daily screen time influence student GPAs in our scatter plot analysis?", "options": ["It had a slight downward (negative) correlation", "It completely doubled the GPAs", "There was no correlation observed", "It led to a positive increase in grades"], "answer": "It had a slight downward (negative) correlation", "fact": "Regression analysis shows a small but noticeable negative slope between total daily screen hours and GPA."}, {"id": 5, "question": "Which cohort of students is most likely to report TikTok as their primary platform?", "options": ["High School students", "Undergraduate students", "Post-graduate students", "Working professionals"], "answer": "High School students", "fact": "Demographic distributions show that younger participants (High School) have a stronger preference for short-form video platforms like TikTok."}, {"id": 6, "question": "What relationship was observed between high anxiety/depression scores and daily usage hours?", "options": ["Higher anxiety categories had a higher median daily screen time", "Higher anxiety categories slept more", "Anxiety was lowest for those using social media 8+ hours", "No difference in screen time was seen"], "answer": "Higher anxiety categories had a higher median daily screen time", "fact": "Boxplots highlight a steady rise in median screen time as self-reported anxiety and depression indexes worsen."}, {"id": 7, "question": "True or False: Excessive late-night social media use is associated with optimal sleep quality.", "options": ["True", "False"], "answer": "False", "fact": "Our data mapping highlights that longer screen hours cluster tightly around poorer sleep duration and lower sleep quality scores."}, {"id": 8, "question": "Which of the following is considered a healthy baseline strategy to combat screen-time fatigue?", "options": ["Setting app limits and taking regular digital detoxes", "Checking notifications every 5 minutes", "Using multiple social platforms simultaneously at night", "Keeping the smartphone screen on max brightness before bed"], "answer": "Setting app limits and taking regular digital detoxes", "fact": "Conscious application of digital boundaries is proven to support cognitive decompression and boost physical well-being."}, {"id": 9, "question": "How many total records are analyzed within this Social Media Impact study?", "options": ["4,500 records", "500 records", "10,000 records", "1,200 records"], "answer": "4,500 records", "fact": "The dataset contains robust survey answers from exactly 4,500 distinct student instances."}, {"id": 10, "question": "What is the primary target demographic represented in this social media dataset?", "options": ["Students (High School and Undergraduate)", "Retired seniors", "Corporate executives", "Toddlers and parents"], "answer": "Students (High School and Undergraduate)", "fact": "The survey was administered exclusively across academic environments capturing student habits and grades."}];
+
+        let currentMode = 'flashcard';
+        let currentIndex = 0;
+        let score = 0;
+        let quizStates = Array(questions.length).fill(null); // Tracks user choices
+
+        function initApp() {
+            currentIndex = 0;
+            score = 0;
+            quizStates = Array(questions.length).fill(null);
+            document.getElementById('score-screen').style.display = 'none';
+            document.getElementById('nav-section').style.display = 'flex';
+            updateCardContent();
+            updateQuizContent();
+            renderModeView();
+        }
+
+        function setMode(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            if (mode === 'flashcard') {
+                document.querySelectorAll('.mode-btn')[0].classList.add('active');
+            } else {
+                document.querySelectorAll('.mode-btn')[1].classList.add('active');
+            }
+            renderModeView();
+        }
+
+        function renderModeView() {
+            document.getElementById('card').classList.remove('flipped');
+            if (currentMode === 'flashcard') {
+                document.getElementById('flashcard-module').style.display = 'block';
+                document.getElementById('quiz-module').style.display = 'none';
+                document.getElementById('score-screen').style.display = 'none';
+                document.getElementById('nav-section').style.display = 'flex';
+                updateCardContent();
+            } else {
+                document.getElementById('flashcard-module').style.display = 'none';
+                document.getElementById('quiz-module').style.display = 'block';
+                document.getElementById('score-screen').style.display = 'none';
+                updateQuizContent();
+            }
+            updateNavigation();
+        }
+
+        function flipCard() {
+            document.getElementById('card').classList.toggle('flipped');
+        }
+
+        function updateCardContent() {
+            const item = questions[currentIndex];
+            document.getElementById('card-question').innerText = item.question;
+            document.getElementById('card-answer').innerText = item.answer;
+            document.getElementById('card-fact').innerHTML = "<strong>Context:</strong> " + item.fact;
+        }
+
+        function updateQuizContent() {
+            const item = questions[currentIndex];
+            document.getElementById('quiz-question').innerText = item.question;
+            
+            const optionsContainer = document.getElementById('quiz-options');
+            optionsContainer.innerHTML = '';
+            
+            const feedbackContainer = document.getElementById('quiz-feedback');
+            feedbackContainer.className = 'feedback';
+
+            const answered = quizStates[currentIndex];
+
+            item.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = opt;
+                
+                if (answered !== null) {
+                    btn.disabled = true;
+                    if (opt === item.answer) {
+                        btn.classList.add('correct');
+                    } else if (opt === answered) {
+                        btn.classList.add('wrong');
+                    }
+                } else {
+                    btn.onclick = () => selectOption(opt);
+                }
+                optionsContainer.appendChild(btn);
+            });
+
+            if (answered !== null) {
+                showFeedback(answered === item.answer, item.fact);
+            }
+        }
+
+        function selectOption(selectedOpt) {
+            const item = questions[currentIndex];
+            quizStates[currentIndex] = selectedOpt;
+            
+            if (selectedOpt === item.answer) {
+                score++;
+            }
+            updateQuizContent();
+        }
+
+        function showFeedback(isCorrect, factText) {
+            const feedbackContainer = document.getElementById('quiz-feedback');
+            feedbackContainer.classList.add('visible');
+            if (isCorrect) {
+                feedbackContainer.classList.add('feedback-success');
+                feedbackContainer.innerHTML = "<strong>Correct!</strong> " + factText;
+            } else {
+                feedbackContainer.classList.add('feedback-error');
+                feedbackContainer.innerHTML = "<strong>Incorrect.</strong> " + factText;
+            }
+        }
+
+        function updateNavigation() {
+            document.getElementById('prev-btn').disabled = currentIndex === 0;
+            document.getElementById('progress-text').innerText = `${currentIndex + 1} of ${questions.length}`;
+            
+            const nextBtn = document.getElementById('next-btn');
+            if (currentIndex === questions.length - 1) {
+                nextBtn.innerText = currentMode === 'quiz' ? 'Finish' : 'Restart';
+            } else {
+                nextBtn.innerText = 'Next';
+            }
+        }
+
+        function nextItem() {
+            if (currentIndex < questions.length - 1) {
+                currentIndex++;
+                document.getElementById('card').classList.remove('flipped');
+                if (currentMode === 'flashcard') {
+                    updateCardContent();
+                } else {
+                    updateQuizContent();
+                }
+                updateNavigation();
+            } else {
+                if (currentMode === 'quiz') {
+                    showScore();
+                } else {
+                    initApp();
+                }
+            }
+        }
+
+        function prevItem() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                document.getElementById('card').classList.remove('flipped');
+                if (currentMode === 'flashcard') {
+                    updateCardContent();
+                } else {
+                    updateQuizContent();
+                }
+                updateNavigation();
+            }
+        }
+
+        function showScore() {
+            document.getElementById('quiz-module').style.display = 'none';
+            document.getElementById('nav-section').style.display = 'none';
+            
+            const scoreScreen = document.getElementById('score-screen');
+            scoreScreen.style.display = 'block';
+            
+            document.getElementById('final-score').innerText = `${score}/${questions.length}`;
+            
+            const congrats = document.getElementById('congrats-message');
+            const pct = (score / questions.length) * 100;
+            if (pct >= 80) {
+                congrats.innerText = "Fantastic! You have mastered this dataset's metrics!";
+            } else if (pct >= 50) {
+                congrats.innerText = "Good job! Review the flashcards to master the facts.";
+            } else {
+                congrats.innerText = "Keep learning! Give it another try.";
+            }
+        }
+
+        function restartQuiz() {
+            initApp();
+        }
+
+        window.onload = initApp;
+    </script>
+</body>
+</html>
